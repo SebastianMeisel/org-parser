@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Org Export</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="/static/org.css" />
+  <script src="/static/viewer.js" defer></script>
+</head>
+<body>
+<h1>Org parser README &amp; feature overview</h1>
+<p>This <code>main.org</code> file is both a <em>README</em> for the project and a regression test for the streaming Org parser.</p>
+<p>It demonstrates:</p>
+<ul>
+<li>Preamble parsing (<code>#+TITLE</code>, <code>#+AUTHOR</code>, <code>#+OPTIONS</code>)</li>
+<li>Depth-first <code>#+INCLUDE</code> expansion across <code>main.org</code>, <code>redundant.org</code> and <code>example.org</code></li>
+<li>Headings with tags, e.g. <strong>*</strong> Tagged heading                        :Test:Frage:</li>
+<li><strong>Unordered lists</strong> and ordered lists (1., 2., 3) parsed into HTML lists</li>
+<li>Inline markup: <strong>bold</strong>, <em>italic</em>, <code>code</code>, <code>code</code>, and Org-style links</li>
+<li><code>#+NAME:</code> based anchors for sections, code blocks and images</li>
+<li><code>#+CAPTION:</code> and <code>#+ATTR_HTML:</code> before images</li>
+<li>Verbatim blocks: <code>example</code> and <code>src</code> (with language + header arguments)</li>
+<p>You can find the source code on my <a href="http://ln1.tail040c1.ts.net:3000/SebasTEAan/org-parser">self-hosted gitea instance</a>.</p>
+</ul>
+<h2>How to run the examples</h2>
+<p>Follow these steps to try the parser on this README:</p>
+<ol>
+<li>Run the <em>Org reader</em> to print the expanded document (with includes):</li>
+</ol>
+<pre class="block block-src lang-bash" data-language="bash" data-results="verbatim"><code>   python3 org_reader.py
+   #+end_src
+
+2. Run the /Org → HTML exporter/:
+   #+begin_src bash :results verbatim
+   python3 org_to_html.py main.org main.html
+   #+end_src
+
+3. Open =main.html= in a browser and verify:
+   - headings and tags
+   - lists
+   - links
+   - code blocks with language metadata
+   - the anchored figure [[#fig:sample_out][Sample output figure]]
+
+** What this is
+This document is the *entry point*. It includes another ORG file using an
+Org-style directive and then a second file nested inside that.
+
+The idea:
+1. We want to read a file line-by-line.
+2. If a line starts with =#+INCLUDE=, we *temporarily switch* to reading that
+   referenced file until EOF, then continue where we left off (depth-first).
+
+Below is a small unordered list, to exercise that feature as well:
+
+- A bullet list item
+- Another item with *bold* and [[https://orgmode.org][a link]]
+- A final item with /italic/ and =inline code=
+
+#+INCLUDE: redundant.org
+
+** Anchors, images, captions and attributes
+
+#+NAME: sec:minimal
+*** Minimal quick test
+If you save these three files next to each other and run the Python code shown
+in the included documents, you should see lines from =example.org= appear
+*before* the remaining lines of =redundant.org=, and those appear *before*
+the remaining lines of =main.org= (depth-first).
+
+Below we demonstrate:
+
+- =#+CAPTION:= before an image
+- =#+NAME:= to create a stable anchor
+- =#+ATTR_HTML:=, =#+ATTR_LATEX:= and =#+ATTR_ORG:= before a file: link
+- The Org → HTML exporter turning the image into a =&lt;figure&gt;= with =&lt;figcaption&gt;=
+
+#+CAPTION: Sample output rendered by the parser
+#+NAME: fig:sample_out
+#+ATTR_HTML: :width 50%
+#+ATTR_LATEX: :width .65\linewidth :placement [!htpb]
+#+ATTR_ORG: :width 700
+[[file:img/RenderedExample.png][Rendered example screenshot]]
+
+** LaTeX support
+
+At the moment inline LaTeX like =\(\sum^{superscript}\)= : \(\sum^{superscript}\) or =$\textsf{\LaTeX}$= : $\textsf{\LaTeX}$ is supported.
+
+** Named code block example
+
+#+NAME: code:demo_include_walk
+#+CAPTION: Tiny demo to walk through =read_with_includes=
+#+ATTR_HTML: :data-role demo :class highlighted
+#+begin_src python :results output :session demo :tangle demo_include_walk.py
+from pathlib import Path
+from org_reader import read_with_includes
+from config_loader import load_config
+
+def main() -&gt; None:
+    cfg = load_config(Path(&quot;config.yml&quot;))
+    for line in read_with_includes(Path(&quot;main.org&quot;), cfg):
+        print(line)
+
+if __name__ == &quot;__main__&quot;:
+    main()
+#+end_src
+
+*** A tiny Python snippet you can run                            :Test:Frage:
+This block assumes you have a function =read_with_includes= (defined below in
+the includes). It also serves as an extra test for:
+
+- Headings with tags (=Test= and =Frage=)
+- A plain =src= block without =#+NAME:= in front
+- Inline code and emphasis inside normal paragraphs
+
+#+begin_src python :results output verbatim
+  from pathlib import Path
+
+  # Change this if your file layout is different.
+  root = Path(&quot;main.org&quot;)
+  print (root)
+
+  # NOTE: read_with_includes is defined in redundant.org in this example set.
+  # for out_line in read_with_includes(root):
+  #     # print a short prefix so you can see the stream
+  #     print(out_line)
+#+end_src
+
+: main.org
+
+#+BEGIN_SRC bash :results output verbatim
+ls -al 
+#+END_SRC
+
+#+begin_example
+insgesamt 732
+drwxr-xr-x. 1 sebastian sebastian   1004 27. Dez 17:23 .
+drwxr-xr-x. 1 sebastian sebastian    194 27. Dez 14:12 ..
+-rw-r--r--. 1 sebastian sebastian      0 27. Dez 14:24 compose.yml
+-rw-r--r--. 1 sebastian sebastian   3972 27. Dez 15:58 config_loader.py
+-rw-r--r--. 1 sebastian sebastian   3971 26. Dez 11:17 config_loader.py~
+-rw-r--r--. 1 sebastian sebastian  43824 27. Dez 15:58 .config_loader.py.~undo-tree~
+-rw-r--r--. 1 sebastian sebastian    445 27. Dez 15:56 config.yml
+-rw-r--r--. 1 sebastian sebastian    445 26. Dez 11:17 config.yml~
+-rw-r--r--. 1 sebastian sebastian   1893 27. Dez 15:56 .config.yml.~undo-tree~
+-rw-r--r--. 1 sebastian sebastian   1270 27. Dez 15:51 example.org
+-rw-r--r--. 1 sebastian sebastian   5811 22. Dez 11:55 filesearch.py
+drwxr-xr-x. 1 sebastian sebastian    234 27. Dez 17:17 .git
+-rw-r--r--. 1 sebastian sebastian   3461 26. Dez 22:42 .gitignore
+-rw-r--r--. 1 sebastian sebastian   3465 26. Dez 22:41 .gitignore~
+-rw-r--r--. 1 sebastian sebastian   1436 26. Dez 22:42 ..gitignore.~undo-tree~
+-rw-r--r--. 1 sebastian sebastian    197 23. Dez 18:02 helper.py
+drwxr-xr-x. 1 sebastian sebastian     38 26. Dez 17:27 img
+-rw-r--r--. 1 sebastian sebastian  17337 24. Dez 21:27 LICENSE
+-rw-r--r--. 1 sebastian sebastian   4289 27. Dez 17:23 main.org
+-rw-r--r--. 1 sebastian sebastian   4161 27. Dez 15:52 main.org~
+-rw-r--r--. 1 sebastian sebastian  10714 27. Dez 17:23 .main.org.~undo-tree~
+-rw-r--r--. 1 sebastian sebastian   4161 27. Dez 16:26 org.css
+-rw-r--r--. 1 sebastian sebastian   4254 27. Dez 16:22 org.css~
+-rw-r--r--. 1 sebastian sebastian   6354 27. Dez 16:26 .org.css.~undo-tree~
+-rw-r--r--. 1 sebastian sebastian  19331 27. Dez 15:26 org_parser.py
+-rw-r--r--. 1 sebastian sebastian  17304 26. Dez 22:34 org_parser.py~
+-rw-r--r--. 1 sebastian sebastian 188048 27. Dez 15:26 .org_parser.py.~undo-tree~
+-rw-r--r--. 1 sebastian sebastian   3574 24. Dez 19:13 org_reader.py
+-rw-r--r--. 1 sebastian sebastian  22135 27. Dez 16:24 org_to_html.py
+-rw-r--r--. 1 sebastian sebastian  19357 26. Dez 22:39 org_to_html.py~
+-rw-r--r--. 1 sebastian sebastian 250416 27. Dez 16:24 .org_to_html.py.~undo-tree~
+-rw-r--r--. 1 sebastian sebastian  12232 27. Dez 16:24 out.html
+drwxr-xr-x. 1 sebastian sebastian    206 27. Dez 16:13 __pycache__
+-rw-r--r--. 1 sebastian sebastian     65 24. Dez 21:27 README.md
+-rw-r--r--. 1 sebastian sebastian   4483 27. Dez 15:53 redundant.org
+-rw-r--r--. 1 sebastian sebastian   4489 27. Dez 15:51 redundant.org~
+-rw-r--r--. 1 sebastian sebastian    535 27. Dez 15:53 .redundant.org.~undo-tree~
+-rw-r--r--. 1 sebastian sebastian   9628 21. Dez 21:24 test_filesearch.py
+#+end_example</code></pre>
+</body>
+</html>

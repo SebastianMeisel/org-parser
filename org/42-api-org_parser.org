@@ -1,0 +1,34 @@
+** Module: org_parser.py
+
+*** Dataclasses
+- OrgEvent(type: str, data: dict[str, Any])
+- OrgPreamble(headers: dict[str,str]) + Properties: title/author/date/options
+- OrgState (mutable streaming state)
+
+*** Wichtige Funktionen
+- parse_org_line(line, cfg, state) -> (state, events)
+  Erzeugt Events (heading, block_begin/end, src_begin/end, list_item, table_row, …)
+
+- tokenize_inline_org_markup(text) -> list[(type,text)]
+  Minimale Inline-Tokens:
+  - plaintext, bold_text, italic_text, code
+  - link (packed url/desc)
+  - math_inline (für \(..\) und $..$)
+
+- parse_src_block_options(arg_string) -> dict[str,str]
+  Liest “language + header args” aus begin_src-Zeile.
+
+- parse_html_attr_args(arg_string) -> dict[str,str]
+  Liest #+ATTR_HTML: …
+
+*** Events (aktuell)
+- preamble_kv, preamble_end
+- heading
+- block_begin, block_end
+- src_begin, src_end
+- list_item, ordered_list_item
+- table_row, table_hline, tblfm
+- name, caption, attr_html
+- comment, comment_block
+- latex_macro
+- line_tokens (debug/renderer input)

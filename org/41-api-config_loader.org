@@ -1,0 +1,18 @@
+** Module: config_loader.py
+
+*** Klasse: OrgReaderConfig
+Container für Regex + Parser-Settings.
+
+Felder (Auszug):
+- verbatim_blocks: set[str]
+- skip_header_keys: set[str]
+- quotes: dict[str,str]
+- block_re, header_kv_re, include_keyword_re, section_heading_re, …
+- comment_begin_re, comment_end_re
+- latex_macro_re
+
+*** DEFAULT_CONFIG
+Default-Konfiguration inkl. Regex (compiled).
+
+*** load_config(path: Path) -> OrgReaderConfig
+Liest YAML (config.yml) und erzeugt eine OrgReaderConfig-Instanz.

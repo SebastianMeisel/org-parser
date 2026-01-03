@@ -1,0 +1,37 @@
+services:
+  org-viewer:
+    build:
+      context: .
+      dockerfile: Containerfile
+    image: org-viewer:latest
+    container_name: org-viewer
+    ports:
+      - "5000:5000"
+    environment:
+      # Optional: tune gunicorn
+      WORKERS: "4"
+      BIND: "0.0.0.0:5000"
+
+      # Optional TLS:
+      # Mount certs into ./certs and either name them tls.crt/tls.key
+      # or change these env vars.
+      CERT_FILE: "/certs/tls.crt"
+      KEY_FILE: "/certs/tls.key"
+
+      # If you ever rename your flask module, change this:
+      APP: "webapp:app"
+
+    volumes:
+      # Your org content + config (read-only is fine)
+      - ./org:/app/org:ro,Z
+      - ./static:/app/static:ro,Z
+      - ./config.yml:/app/config.yml:ro,Z
+      - ./README.org:/app/README.org:ro,Z
+
+      # Persist math cache across restarts (needs to be writable)
+      - ./.math-cache:/app/.math-cache:rw,U,Z
+
+      # TLS certs (DO NOT bake private keys into the image)
+      - ./certs:/certs:ro,U,Z
+
+    restart: unless-stopped

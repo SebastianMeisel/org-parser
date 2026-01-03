@@ -1,0 +1,650 @@
+/* ==== Base layout & high-contrast light theme ============================ */
+
+:root {
+  color-scheme: light;
+  --page-bg: #ffffff;
+  --text-color: #111111;
+  --muted-text: #444444;
+  --border-color: #cccccc;
+  --accent-color: #0044cc;   /* SRC code blocks */
+  --results-color: #007744;  /* RESULT blocks */
+  --heading-border: #999999;
+  --code-bg: #f5f5f5;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: var(--page-bg);
+  color: var(--text-color);
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  line-height: 1.5;
+  max-width: 70ch;
+  margin: 2rem auto;
+  padding: 0 1rem 3rem;
+}
+
+/* Links: classic high-contrast blue */
+
+a {
+  color: var(--accent-color);
+  text-decoration: underline;
+}
+
+a:hover,
+a:focus {
+  text-decoration: none;
+}
+
+/* ===== Headings: indent by level + symbol =============================== */
+
+/*
+ * Org headings already map to <h1>…<h6>.
+ * We indent deeper levels and add a symbol in front.
+ */
+
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 600;
+  margin-top: 1.4em;
+  margin-bottom: 0.3em;
+  color: var(--text-color);
+}
+
+/* Indentation per level */
+h1 { margin-left: 0; }
+h2 { margin-left: 1rem; }
+h3 { margin-left: 2rem; }
+h4 { margin-left: 3rem; }
+h5 { margin-left: 4rem; }
+h6 { margin-left: 5rem; }
+
+/* Optional vertical guideline for sub-sections */
+h2, h3, h4, h5, h6 {
+  border-left: 2px solid var(--heading-border);
+  padding-left: 0.5rem;
+}
+
+/* Symbol in front of headings */
+h1::before,
+h2::before,
+h3::before,
+h4::before,
+h5::before,
+h6::before {
+  display: inline-block;
+  margin-right: 0.35em;
+}
+
+/* Choose simple, clearly visible symbols per level */
+h1::before,
+h2::before,
+h3::before,
+h4::before,
+h5::before,
+h6::before { content: "▸"; }
+
+/* Tag suffix from Org (span.tags) */
+.tags {
+  font-size: 0.9em;
+  color: var(--muted-text);
+  margin-left: 0.4rem;
+}
+
+/* ===== Paragraphs & lists =============================================== */
+
+p {
+  margin: 0.3em 0 0.8em;
+}
+
+ul, ol {
+  margin: 0.2em 0 0.8em 2.5rem;
+  padding-left: 1.2rem;
+}
+
+li {
+  margin: 0.1em 0;
+}
+
+/* ===== Code & SRC blocks =============================================== */
+
+code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  background: var(--code-bg);
+  padding: 0.1em 0.3em;
+  border-radius: 4px;
+}
+
+/* All blocks rendered as <pre> */
+
+pre {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  background: var(--code-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 0.8rem 1rem;
+  overflow-x: auto;
+  margin: 1rem 0;
+  position: relative; /* needed for the language label positioning */
+}
+
+/* SRC blocks: language label (already present) */
+
+pre.block-src {
+  border-left: 4px solid var(--accent-color);
+}
+
+pre.block-src::before {
+  content: attr(data-language); /* language name from data-language */
+  position: absolute;
+  top: 0;
+  right: 0;
+  transform: translate(-0.6rem, 0.4rem);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 0.1rem 0.35rem;
+  border-radius: 4px;
+  background: var(--accent-color);
+  color: #ffffff;
+}
+
+/* RESULT blocks: similar layout, different color + fixed label */
+
+pre.block.result {
+  border-left: 4px solid var(--results-color);
+}
+
+pre.block.result::before {
+  content: "RESULTS";
+  position: absolute;
+  top: 0;
+  right: 0;
+  transform: translate(-0.6rem, 0.4rem);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 0.1rem 0.35rem;
+  border-radius: 4px;
+  background: var(--results-color);
+  color: #ffffff;
+}
+
+pre .copy-button {
+  position: absolute;
+  top: 0.35rem;
+  right: 0.35rem;
+
+  font-size: 0.75rem;
+  padding: 0.1rem 0.45rem;
+  border-radius: 4px;
+  border: 1px solid var(--border-color);
+
+  background: #ffffff;
+  color: var(--text-color);
+  cursor: pointer;
+
+  /* hidden initially */
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 120ms ease, visibility 120ms ease;
+}
+
+/* Show only when hovering the block */
+pre.block-src:hover .copy-button,
+pre.block.result:hover .copy-button {
+  opacity: 1;
+  visibility: visible;
+}
+
+pre .copy-button:hover {
+  background: var(--code-bg);
+}
+
+/* Slightly separate the inner <code> from the language label */
+pre > code {
+  display: block;
+  margin-top: 0.2rem;
+}
+
+/* ===== Images & figures ================================================== */
+
+figure {
+  margin: 1.5rem auto;
+  padding: 0.5rem;
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+  background: #fafafa;
+  text-align: center;
+}
+
+figure img {
+  max-width: 100%;
+  height: auto;
+}
+
+figcaption {
+  margin-top: 0.4rem;
+  font-size: 0.9em;
+  color: var(--muted-text);
+}
+
+/* Inline images (from plain links that resolve to images) */
+img.inline-image {
+  max-width: 100%;
+  height: auto;
+  vertical-align: middle;
+}
+
+/* Tag suffix from Org (span.tags) */
+.tags {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+
+  font-size: 0.8em;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+
+  padding: 0.1rem 0.4rem;
+  border-radius: 999px;
+  border: 1px solid var(--accent-color);
+  background: rgba(0, 68, 204, 0.08); /* light blue tint */
+  color: var(--accent-color);
+}
+
+/* If you ever output multiple tags in one span, space them out a bit */
+.tags::before {
+  content: "⟡";
+  font-size: 0.8em;
+  margin-right: 0.15rem;
+  opacity: 0.85;
+}
+
+
+/* ===== Misc small tweaks ================================================ */
+
+hr {
+  border: none;
+  border-top: 1px solid var(--border-color);
+  margin: 2rem 0;
+}
+
+table {
+  border-collapse: collapse;
+  margin: 1rem 0;
+}
+
+th, td {
+  border: 1px solid var(--border-color);
+  padding: 0.3rem 0.5rem;
+}
+
+/* Collapsible headings */
+
+.collapsible-heading {
+  cursor: pointer;
+  position: relative;
+  padding-right: 1.5rem; /* space for arrow */
+}
+
+.collapsible-heading::after {
+  content: "▾";
+  position: absolute;
+  right: 0;
+  top: 0.15em;
+  font-size: 0.8em;
+  opacity: 0.7;
+}
+
+.collapsible-heading.collapsed::after {
+  content: "▸";
+}
+
+.collapsible-heading.collapsed {
+  opacity: 0.85;
+}
+
+.comment-wrapper {
+  margin: 0.6rem 0;
+}
+
+.comment-toggle {
+  cursor: pointer;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.9rem;
+}
+
+.comment-box {
+  margin-top: 0.4rem;
+  padding: 0.5rem 0.75rem;
+  border-left: 3px solid #999;
+  background: rgba(0, 0, 0, 0.04);
+}
+
+.verse {
+    margin: 0.75rem 0;
+    padding-left: 1rem;
+    border-left: 3px solid #999;
+    white-space: pre-wrap;
+    line-height: .75;
+}
+
+.verse-line {
+  /* keep it simple; line breaks are explicit via <br> */
+}
+
+/* Inline math SVG: scale to current text size */
+img.math-inline {
+  height: 1em;           /* match font size */
+  width: auto;           /* keep aspect ratio */
+  vertical-align: -0.15em; /* baseline tweak (adjust to taste) */
+}
+
+/* ===== Modern file manager look ========================================= */
+
+/* Sidebar insgesamt etwas "cardiger" */
+body.with-sidebar .sidebar {
+  background: linear-gradient(180deg, #ffffff 0%, #fbfbfb 100%);
+}
+
+/* Abschnitt-Label etwas klarer */
+.sidebar-label {
+  font-size: 0.8rem;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: #555;
+}
+
+/* File manager container: bisschen Abstand */
+.sidebar .fm-root,
+.sidebar .file-tree,
+.sidebar .fm {
+  margin-top: 0.25rem;
+}
+
+/* Ordner als "chip" / row */
+.fm-dir {
+  margin: 0.25rem 0;
+}
+
+/* Summary-Zeile modernisieren */
+.fm-dir > summary {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+
+  padding: 0.35rem 0.5rem;
+  border-radius: 0.6rem;
+
+  font-weight: 650;
+  color: var(--text-color);
+
+  outline: none;
+  list-style: none; /* some browsers */
+}
+
+/* Default marker ausblenden (wir nutzen own chevron) */
+.fm-dir > summary::-webkit-details-marker {
+  display: none;
+}
+
+/* Chevron + Folder Icon */
+.fm-dir > summary::before {
+  content: "▸";
+  display: inline-block;
+  width: 1ch;
+  opacity: 0.7;
+  transform: translateY(-0.02em);
+}
+
+.fm-dir[open] > summary::before {
+  content: "▾";
+}
+
+/* Folder icon */
+.fm-dir > summary::after {
+  content: "📁";
+  opacity: 0.8;
+  font-size: 0.95em;
+  margin-left: auto; /* schiebt Icon nach rechts */
+}
+
+/* Hover/Focus states */
+.fm-dir > summary:hover {
+  background: rgba(0, 68, 204, 0.06);
+}
+
+.fm-dir > summary:focus-visible {
+  box-shadow: 0 0 0 3px rgba(0, 68, 204, 0.18);
+}
+
+/* Kinderbereich dezenter und "clean" */
+.fm-children {
+  margin: 0.2rem 0 0.3rem 0.75rem;
+  padding-left: 0.55rem;
+
+  border-left: 1px solid rgba(0,0,0,0.14);
+}
+
+/* File rows als pill/row mit Icon */
+.fm-file a {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+
+  padding: 0.28rem 0.5rem;
+  border-radius: 0.55rem;
+
+  color: var(--text-color);
+  text-decoration: none;
+}
+
+/* File icon */
+.fm-file a::before {
+  content: "📄";
+  opacity: 0.75;
+  font-size: 0.95em;
+}
+
+/* Hover/Active */
+.fm-file a:hover {
+  background: rgba(0, 0, 0, 0.045);
+}
+
+.fm-file.active a {
+  background: rgba(0, 68, 204, 0.10);
+  border: 1px solid rgba(0, 68, 204, 0.25);
+  font-weight: 750;
+  text-decoration: none;
+}
+
+/* Active file icon slightly stronger */
+.fm-file.active a::before {
+  opacity: 0.95;
+}
+
+/* Optional: scroll area a bit nicer */
+body.with-sidebar .sidebar {
+  scrollbar-gutter: stable;
+}
+
+/* Reduce visual noise in collapsed sidebar case (no change needed, just safety) */
+body.with-sidebar.sidebar-collapsed .sidebar {
+  background: transparent;
+}
+/* ===== Sidebar toggle ===================================================== */
+
+.topbar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.topbar-spacer {
+  flex: 1;
+}
+
+.icon-btn {
+  appearance: none;
+  border: 1px solid var(--border-color);
+  background: transparent;
+  border-radius: 0.6rem;
+  padding: 0.35rem 0.45rem;
+  cursor: pointer;
+  line-height: 0;
+}
+
+.icon-btn:hover {
+  filter: brightness(0.97);
+}
+
+.icon-btn img {
+  display: block;
+}
+
+/* Collapsed sidebar state */
+body.with-sidebar.sidebar-collapsed .sidebar {
+  width: 0;
+  padding: 0;
+  border-right: none;
+  overflow: hidden;
+}
+
+body.with-sidebar.sidebar-collapsed .sidebar * {
+  display: none; /* keep it simple; sidebar is fully hidden */
+}
+
+/* Give main content a bit more room when sidebar is gone */
+body.with-sidebar.sidebar-collapsed .content {
+  max-width: 80ch;
+}
+
+/* ===== Force real sidebar (left) ======================================== */
+
+/* The body must be full width when sidebar is enabled */
+body.with-sidebar {
+  max-width: none;
+  margin: 0;
+  padding: 0;
+}
+
+/* Critical: layout must be row-flex, not column */
+body.with-sidebar .layout {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: stretch;
+  min-height: 100vh;
+}
+
+/* Sidebar on the left */
+body.with-sidebar .sidebar {
+  width: 18rem;
+  flex: 0 0 18rem;
+  padding: 1rem;
+  border-right: 1px solid var(--border-color);
+  border-bottom: none;          /* <- make sure it's not treated like topbar */
+  background: #fcfcfc;
+  overflow-y: auto;
+}
+
+/* Content on the right */
+body.with-sidebar .content {
+  flex: 1 1 auto;
+  padding: 2rem 1rem 3rem;
+  max-width: 70ch;
+  margin: 0 auto;
+}
+
+/* Collapsed sidebar = width 0 (side collapse) */
+body.with-sidebar.sidebar-collapsed .sidebar {
+  width: 0;
+  flex-basis: 0;
+  padding: 0;
+  border-right: none;
+  overflow: hidden;
+}
+
+body.with-sidebar.sidebar-collapsed .sidebar * {
+  display: none;
+}
+/* ===== Modern file tree look ============================================ */
+
+.sidebar {
+  font-size: 0.95rem;
+}
+
+.sidebar-title a {
+  font-weight: 800;
+  letter-spacing: 0.02em;
+}
+
+.sidebar-section {
+  margin-top: 1rem;
+}
+
+.sidebar-label {
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted-text);
+  margin: 0.75rem 0 0.35rem;
+}
+
+/* Tree rows */
+.fm-dir summary,
+.fm-file a {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.28rem 0.45rem;
+  border-radius: 0.6rem;
+}
+
+/* Hover state */
+.fm-dir summary:hover,
+.fm-file a:hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+/* Directory nesting */
+.fm-children {
+  margin-left: 0.75rem;
+  padding-left: 0.6rem;
+  border-left: 1px solid rgba(0,0,0,0.15);
+}
+
+/* Remove default disclosure marker and use a nicer caret */
+.fm-dir summary {
+  list-style: none;
+  cursor: pointer;
+  user-select: none;
+}
+.fm-dir summary::-webkit-details-marker {
+  display: none;
+}
+.fm-dir summary::before {
+  content: "▸";
+  font-size: 0.85em;
+  opacity: 0.75;
+}
+.fm-dir[open] > summary::before {
+  content: "▾";
+}
+
+/* File links */
+.fm-file a {
+  text-decoration: none;
+  color: var(--text-color);
+}
+.fm-file.active a {
+  font-weight: 800;
+  text-decoration: none;
+  background: rgba(0, 68, 204, 0.10);
+  border: 1px solid rgba(0, 68, 204, 0.20);
+}

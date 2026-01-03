@@ -1,0 +1,13 @@
+** Module: math_renderer.py
+- render_math_to_svg(math_src, out_path, *, preamble_macros="") -> None
+  schreibt temporäres standalone-LaTeX, dann latex->dvi->dvisvgm->svg
+
+** Module: webapp.py
+- index(): listet README.org + org/*.org
+- view_file(filename): rendert Org→HTML
+- assets(subpath): served /assets/...
+- math_image(digest): erzeugt SVG on-demand aus Cache
+
+Wichtig:
+- Math-Cache muss writable sein: /app/.math-cache
+- im Container: Volume mount mit :Z,U empfohlen
