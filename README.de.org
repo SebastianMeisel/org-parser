@@ -1,11 +1,10 @@
 #+TITLE: org-parser – Dokumentation (Deutsch)
 #+OPTIONS: toc:t num:nil
 
-Siehe auch die [[file:README.en.org][englische Version]].
+
 
 * org-parser
 
-Siehe auch die [[file:10-overview.en.org][englische Version]].
 
 ** Was ist das?
 =org-parser= ist ein kleiner, streaming-basierter Org-Reader + minimaler Org→HTML Exporter.
@@ -24,7 +23,6 @@ Designziele:
 - “gut genug” Org-Unterstützung
 - klarer State + Events
 
-Siehe auch die [[file:20-installation.en.org][englische Version]].
 
 ** Installation & Betrieb
 
@@ -87,7 +85,6 @@ Beispiel:
 
 (ist besser als =chmod 777= auf dem Host)
 
-Siehe auch die [[file:30-usage-cli.en.org][englische Version]].
 
 ** Nutzung (CLI / Export / Web)
 
@@ -126,7 +123,6 @@ TLS:
 gunicorn -w 4 -b 0.0.0.0:5000 webapp:app --certfile /certs/tls.crt --keyfile /certs/tls.key
 #+end_src
 
-Siehe auch die [[file:40-api-reference.en.org][englische Version]].
 
 ** API-Referenz
 
