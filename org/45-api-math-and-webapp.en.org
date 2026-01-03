@@ -1,0 +1,33 @@
+#+TITLE: Math renderer & web app – API (English)
+
+**** Module: math_renderer.py
+- =render_math_to_svg(math_src, out_path, *, preamble_macros="") -> None=
+  - writes a temporary standalone LaTeX file
+  - runs =latex= → =dvi= → =dvisvgm=
+  - the result is an SVG file at =out_path=
+  - uses a cache so the same formula isn’t rendered repeatedly
+
+Typical usage:
+- called indirectly from the =/math/<digest>.svg= endpoint
+- digest is based on the math source string + optional macros
+
+**** Module: webapp.py
+- =index()=
+  - lists =README.org= and files under =org/*.org=
+  - provides entry points to view Org documents
+
+- =view_file(filename)=
+  - renders an Org file via reader + parser + renderer into HTML
+  - returns the HTML view in the browser
+
+- =assets(subpath)=
+  - serves static assets under =/assets/...= (CSS, images, …)
+
+- =math_image(digest)=
+  - creates (or returns from cache) an SVG image for a math expression
+  - uses =math_renderer.render_math_to_svg=
+
+Important:
+- math cache must be writable: =/app/.math-cache=
+- in containers, a volume mount with =:Z,U= is recommended
+

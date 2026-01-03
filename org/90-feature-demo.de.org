@@ -1,0 +1,36 @@
+#+TITLE: org-parser Feature-Demo (Deutsch)
+
+**** Was dieses Dokument testet
+- Preamble-Parsing
+- INCLUDE (depth-first)
+- Überschriften & Tags
+- Listen
+- Inline-Markup & Links
+- Bilder + Caption + ATTR_HTML + NAME
+- Verbatim- und src-Blöcke
+- Tabellen + TBLFM
+- Inline-Math + LaTeX-Makros
+
+**** Bilder / Anchors / Caption / ATTR_HTML
+
+#+NAME: fig:sample_out
+#+CAPTION: Beispielausgabe, gerendert durch den Parser
+#+ATTR_HTML: :width 50%
+[[file:img/RenderedExample.png][Rendered example screenshot]]
+
+**** Inline-Math und LaTeX
+Beispiel: \(\sum^{superscript}\) und $\textsf{\LaTeX}$
+
+**** Tabellen + TBLFM
+
+| Name     | Deutsch | Mathe | Durchschnitt |
+|----------+---------+-------+--------------|
+| Schüler1 |       2 |     3 |              |
+| Schüler2 |       1 |     1 |              |
+#+TBLFM: $4=round(($2+$3)/2, 2)
+
+**** Hinweis
+Dieses Projekt ist ein Hobby-Projekt, teilweise mit Hilfe von ChatGPT entstanden
+und nicht für produktiven Einsatz gedacht.
+Lizenz: GPLv3
+

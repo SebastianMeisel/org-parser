@@ -1,0 +1,36 @@
+#+TITLE: org-parser Feature Demo (English)
+
+**** What this document tests
+- preamble parsing
+- INCLUDE (depth-first)
+- headings & tags
+- lists
+- inline markup & links
+- images + caption + ATTR_HTML + NAME anchors
+- verbatim and src blocks
+- tables + TBLFM
+- inline math + LaTeX macros
+
+**** Images / anchors / caption / ATTR_HTML
+
+#+NAME: fig:sample_out
+#+CAPTION: Sample output rendered by the parser
+#+ATTR_HTML: :width 50%
+[[file:img/RenderedExample.png][Rendered example screenshot]]
+
+**** Inline math and LaTeX
+Example: \(\sum^{superscript}\) and $\textsf{\LaTeX}$
+
+**** Tables + TBLFM
+
+| Name     | German | Math | Average |
+|----------+--------+------|---------|
+| Student1 |      2 |    3 |         |
+| Student2 |      1 |    1 |         |
+#+TBLFM: $4=round(($2+$3)/2, 2)
+
+**** Note
+This is a hobby project, partly created with help from ChatGPT,
+and not meant for production use.  
+License: GPLv3
+

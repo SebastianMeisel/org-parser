@@ -1,0 +1,41 @@
+#+TITLE: config_loader.py – API (English)
+
+**** Overview
+The =config_loader.py= module encapsulates all configuration for the Org reader
+(regexes, block types, header keys, etc.) in a dedicated class.
+
+**** Class: OrgReaderConfig
+Container for regexes and parser settings.
+
+Key fields (excerpt):
+- verbatim_blocks: set[str]
+- skip_header_keys: set[str]
+- quotes: dict[str,str]
+- block_re: re.Pattern
+- header_kv_re: re.Pattern
+- include_keyword_re: re.Pattern
+- section_heading_re: re.Pattern
+- comment_begin_re, comment_end_re
+- latex_macro_re
+
+An instance is passed around to the reader/parser as a configuration object.
+
+**** DEFAULT_CONFIG
+=DEFAULT_CONFIG= is a preconfigured =OrgReaderConfig= instance with compiled
+regexes for “normal” Org files.
+
+Intended as:
+- a sensible default configuration
+- a reference for how the YAML config file is structured
+
+**** load_config(path: Path) -> OrgReaderConfig
+Reads a YAML file (e.g. =config.yml=) and creates an =OrgReaderConfig= instance.
+
+Typical behavior:
+- parses YAML
+- compiles regex strings
+- converts fields like =verbatim_blocks= / =skip_header_keys= to proper types
+  (set, dict, …)
+
+Used to override or customize the default configuration.
+

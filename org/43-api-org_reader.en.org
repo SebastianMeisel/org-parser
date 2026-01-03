@@ -1,0 +1,48 @@
+#+TITLE: org_reader.py – API (English)
+
+**** Overview
+=org_reader.py= is responsible for reading Org files with
+=#+INCLUDE= support and preamble handling. The result is an iterator
+over lines (with includes expanded).
+
+**** Functions
+
+- =un_quote_string(string, cfg) -> str=
+  - removes quotes based on the rules in =cfg.quotes=
+  - useful for paths/strings from headers or INCLUDE lines
+
+- =resolve_include(line, path, cfg) -> Path=
+  - evaluates a =#+INCLUDE:= line
+  - resolves the file path relative to =path= (current file)
+  - returns a =Path= instance
+
+- =is_include(line, cfg) -> bool=
+  - checks whether a line is an include directive
+  - uses regexes from the configuration
+
+- =should_skip_header_line(line, cfg) -> bool=
+  - decides whether a preamble line should be skipped
+  - driven by settings like =skip_header_keys=
+
+- =preamble_decision(line, cfg) -> (skip: bool, still_in_preamble: bool)=
+  - central logic for “Are we still in the preamble?”
+  - determines:
+    - whether the current line is ignored as preamble
+    - whether the preamble ends at this line
+
+- =read_with_includes(path, cfg, *, is_root=True) -> Iterator[str]=
+  - main entry point of the reader
+  - reads a file line by line
+  - expands =#+INCLUDE:= directives depth-first
+  - respects preamble handling and skip rules
+
+**** read_with_includes – rules
+- depth-first include expansion
+- no expansion inside:
+  - blocks (=state.is_inside_block=)
+  - drawers
+  - comment blocks
+- for included files:
+  - preamble is skipped until the first “real” content line
+  - your =preamble_decision= logic defines that behavior
+

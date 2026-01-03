@@ -1,0 +1,76 @@
+#+TITLE: org_parser.py – API (English)
+
+**** Overview
+=org_parser.py= contains the streaming parser that turns lines into =OrgEvent=
+objects and maintains the stateful =OrgState=.
+
+**** Dataclasses
+- =OrgEvent(type: str, data: dict[str, Any])=
+  - generic event object
+  - =type= describes the kind of event (e.g. ="heading"=, ="block_begin"=, …)
+  - =data= holds context-specific information (level, text, options, …)
+
+- =OrgPreamble(headers: dict[str,str])=
+  - represents preamble headers (=#+TITLE=, =#+AUTHOR=, …)
+  - convenient properties for title/author/date/options
+
+- =OrgState=
+  - mutable streaming state
+  - tracks e.g.:
+    - whether we are in the preamble
+    - whether we are inside a block / src block / comment block
+    - context for lists, tables, etc.
+
+**** Important functions
+
+- =parse_org_line(line, cfg, state) -> (state, events)=  
+  Core parser function:
+  - takes a single =line=
+  - uses regexes from =cfg=
+  - updates =state=
+  - returns a list of =events= (often empty or 1–2 entries)
+
+Typical event types:
+- =heading=
+- =block_begin= / =block_end=
+- =src_begin= / =src_end=
+- =list_item= / =ordered_list_item=
+- =table_row= / =table_hline=
+- =tblfm=
+- =name=, =caption=, =attr_html=
+- =comment=, =comment_block=
+- =latex_macro=
+- =line_tokens= (inline tokenization of text lines)
+
+- =tokenize_inline_org_markup(text) -> list[(type, text)]=  
+  Minimal inline tokenizer supporting:
+  - plaintext
+  - bold_text
+  - italic_text
+  - code
+  - link (combined url/desc)
+  - math_inline (for \(..\) and $..$)
+
+- =parse_src_block_options(arg_string) -> dict[str,str]=  
+  Parses the arguments of the =#+begin_src= line:
+  - language (e.g. =python=, =bash=)
+  - header args (e.g. =:results=, =:session=, =:tangle=, =:var= …)
+
+- =parse_html_attr_args(arg_string) -> dict[str,str]=  
+  Parses lines like:
+  - =#+ATTR_HTML: :width 50% :class foo=
+  into a dictionary that the renderer turns into HTML attributes.
+
+**** Events (current)
+The parser currently emits, among others, the following event types:
+- =preamble_kv=, =preamble_end=
+- =heading=
+- =block_begin=, =block_end=
+- =src_begin=, =src_end=
+- =list_item=, =ordered_list_item=
+- =table_row=, =table_hline=, =tblfm=
+- =name=, =caption=, =attr_html=
+- =comment=, =comment_block=
+- =latex_macro=
+- =line_tokens=
+

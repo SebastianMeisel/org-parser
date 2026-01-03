@@ -1,0 +1,76 @@
+#+TITLE: org_parser.py – API (Deutsch)
+
+**** Überblick
+=org_parser.py= enthält den Streaming-Parser, der Zeilen in Events (=OrgEvent=)
+übersetzt und den zustandsbehafteten =OrgState= pflegt.
+
+**** Dataclasses
+- =OrgEvent(type: str, data: dict[str, Any])=
+  - generisches Event-Objekt
+  - =type= beschreibt die Event-Art (z. B. ="heading"=, ="block_begin"=, …)
+  - =data= enthält kontextspezifische Informationen (Level, Text, Optionen, …)
+
+- =OrgPreamble(headers: dict[str,str])=
+  - repräsentiert die Kopfzeilen (=#+TITLE=, =#+AUTHOR=, …)
+  - bequeme Properties für title/author/date/options
+
+- =OrgState=
+  - mutable Streaming-State
+  - merkt sich u. a.:
+    - ob wir im Preamble sind
+    - ob wir in einem Block / src-Block / Kommentarblock sind
+    - Kontext für Listen, Tabellen usw.
+
+**** Wichtige Funktionen
+
+- =parse_org_line(line, cfg, state) -> (state, events)=  
+  Kernfunktion des Parsers:
+  - nimmt eine einzelne Zeile (=line=)
+  - nutzt die Regexe aus =cfg=
+  - aktualisiert =state=
+  - gibt eine Liste von =events= zurück (häufig leer oder 1–2 Einträge)
+
+Typische Events:
+- =heading=
+- =block_begin= / =block_end=
+- =src_begin= / =src_end=
+- =list_item= / =ordered_list_item=
+- =table_row= / =table_hline=
+- =tblfm= (TBLFM-Zeile)
+- =name=, =caption=, =attr_html=
+- =comment=, =comment_block=
+- =latex_macro=
+- =line_tokens= (Inline-Tokenisierung des Fließtexts)
+
+- =tokenize_inline_org_markup(text) -> list[(type, text)]=  
+  Minimaler Inline-Tokenizer mit Unterstützung für:
+  - plaintext
+  - bold_text
+  - italic_text
+  - code
+  - link (kombiniertes url/desc)
+  - math_inline (für \(..\) und $..$)
+
+- =parse_src_block_options(arg_string) -> dict[str,str]=  
+  Parst die Argumente der =#+begin_src=-Zeile:
+  - Sprache (z. B. =python=, =bash=)
+  - Header-Args (z. B. =:results=, =:session=, =:tangle=, =:var= …)
+
+- =parse_html_attr_args(arg_string) -> dict[str,str]=  
+  Parst Zeilen wie:
+  - =#+ATTR_HTML: :width 50% :class foo=
+  in ein Dictionary, das der Renderer später in HTML-Attribute umsetzen kann.
+
+**** Events (aktuell)
+Der Parser erzeugt u. a. folgende Event-Typen:
+- =preamble_kv=, =preamble_end=
+- =heading=
+- =block_begin=, =block_end=
+- =src_begin=, =src_end=
+- =list_item=, =ordered_list_item=
+- =table_row=, =table_hline=, =tblfm=
+- =name=, =caption=, =attr_html=
+- =comment=, =comment_block=
+- =latex_macro=
+- =line_tokens=
+

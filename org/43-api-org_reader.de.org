@@ -1,0 +1,48 @@
+#+TITLE: org_reader.py – API (Deutsch)
+
+**** Überblick
+=org_reader.py= kümmert sich um das Lesen von Org-Dateien mit
+=#+INCLUDE=-Unterstützung und Preamble-Logik. Das Ergebnis ist ein
+Iterator über Zeilen (inkl. expandierter Includes).
+
+**** Funktionen
+
+- =un_quote_string(string, cfg) -> str=
+  - entfernt Anführungszeichen nach den Regeln in =cfg.quotes=
+  - hilfreich für Pfade/Strings aus Headern oder INCLUDE-Zeilen
+
+- =resolve_include(line, path, cfg) -> Path=
+  - wertet eine =#+INCLUDE:-Zeile aus
+  - löst den Dateipfad relativ zu =path= (aktuelles File) auf
+  - gibt einen =Path=-Wert zurück
+
+- =is_include(line, cfg) -> bool=
+  - prüft, ob eine Zeile eine INCLUDE-Anweisung ist
+  - nutzt die Regexe aus der Konfiguration
+
+- =should_skip_header_line(line, cfg) -> bool=
+  - entscheidet, ob eine Preamble-Zeile übersprungen werden soll
+  - hängt u. a. von =skip_header_keys= ab
+
+- =preamble_decision(line, cfg) -> (skip: bool, still_in_preamble: bool)=
+  - zentrale Logik für „Sind wir noch im Preamble?“
+  - bestimmt:
+    - ob die aktuelle Zeile im Preamble ignoriert wird
+    - ob das Preamble-Fenster jetzt endet
+
+- =read_with_includes(path, cfg, *, is_root=True) -> Iterator[str]=
+  - Haupt-Entry-Point des Readers
+  - liest eine Datei zeilenweise
+  - expandiert =#+INCLUDE:=-Direktiven depth-first
+  - respektiert Preamble-Entscheidung und Skip-Regeln
+
+**** read_with_includes – Regeln
+- depth-first Include-Expansion
+- keine Expansion innerhalb:
+  - Blöcken (=state.is_inside_block=)
+  - Drawers
+  - Kommentarblöcken
+- bei inkludierten Dateien:
+  - Preamble wird übersprungen, bis erster „echter“ Inhalt auftaucht
+  - deine Logik in =preamble_decision= steuert das Verhalten
+

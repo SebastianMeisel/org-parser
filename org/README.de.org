@@ -1,0 +1,14 @@
+#+TITLE: org-parser – Dokumentation (Deutsch)
+#+OPTIONS: toc:t num:nil
+
+Siehe auch die [[file:README.en.org][englische Version]].
+
+* org-parser
+
+#+INCLUDE: "10-overview.de.org"
+#+INCLUDE: "20-installation.de.org"
+#+INCLUDE: "30-usage-cli.de.org"
+#+INCLUDE: "40-api-reference.de.org"
+#+INCLUDE: "60-troubleshooting.de.org"
+#+INCLUDE: "90-feature-demo.de.org"
+

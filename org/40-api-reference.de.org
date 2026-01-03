@@ -1,0 +1,27 @@
+#+TITLE: API-Referenz (Deutsch)
+
+Siehe auch die [[file:40-api-reference.en.org][englische Version]].
+
+** API-Referenz
+
+Dieser Abschnitt bündelt die Dokumentation der internen Module von =org-parser=.
+
+Die eigentlichen Texte liegen in eigenen Dateien und werden hier per
+=#+INCLUDE= eingebunden, damit sie sowohl einzeln als auch gesammelt
+gelesen werden können.
+
+*** config_loader.py
+#+INCLUDE: "41-api-config_loader.de.org"
+
+*** org_parser.py
+#+INCLUDE: "42-api-org_parser.de.org"
+
+*** org_reader.py
+#+INCLUDE: "43-api-org_reader.de.org"
+
+*** org_to_html.py
+#+INCLUDE: "44-api-org_to_html.de.org"
+
+*** Math & Web-App
+#+INCLUDE: "45-api-math-and-webapp.de.org"
+

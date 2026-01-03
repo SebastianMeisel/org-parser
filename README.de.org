@@ -1,0 +1,469 @@
+#+TITLE: org-parser – Dokumentation (Deutsch)
+#+OPTIONS: toc:t num:nil
+
+Siehe auch die [[file:README.en.org][englische Version]].
+
+* org-parser
+
+Siehe auch die [[file:10-overview.en.org][englische Version]].
+
+** Was ist das?
+=org-parser= ist ein kleiner, streaming-basierter Org-Reader + minimaler Org→HTML Exporter.
+
+Ich habe ihn geschrieben, um meine ORG-Dateien auch von Geräten aus bequem anschauen zu können, auf denen ich Emacs nicht installieren kann.
+
+Bausteine:
+- =org_reader.py=: liest Org-Dateien zeilenweise und expandiert =#+INCLUDE= depth-first
+- =org_parser.py=: Streaming-Parser, der Events (=OrgEvent=) erzeugt
+- =org_to_html.py=: minimaler Renderer
+- =webapp.py=: Webviewer (Flask)
+- =math_renderer.py=: LaTeX → SVG (Cache)
+
+Designziele:
+- streaming / lazy
+- “gut genug” Org-Unterstützung
+- klarer State + Events
+
+Siehe auch die [[file:20-installation.en.org][englische Version]].
+
+** Installation & Betrieb
+
+*** Option A: Lokal (system Python)
+Voraussetzungen:
+- Python ≥ 3.12 empfohlen
+- für Math-SVG: =latex= und =dvisvgm= im PATH
+
+Minimal:
+#+begin_src bash :results verbatim
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install -U pip
+python -m pip install flask gunicorn pyyaml
+#+end_src
+
+*** Option B: Lokal mit =uv=
+#+begin_src bash :results verbatim
+uv venv
+source .venv/bin/activate
+uv pip install flask gunicorn pyyaml
+#+end_src
+
+*** Option C: Container (Podman/Docker)
+Du baust ein Image und startest es mit (podman-)compose.
+
+Vorteil:
+- reproduzierbar
+- kein Python-Setup auf dem Host nötig
+
+**** Build
+#+begin_src bash :results verbatim
+podman build -t org-viewer:latest -f Containerfile .
+#+end_src
+
+**** Run (Compose)
+#+begin_src bash :results verbatim
+podman-compose up -d
+podman logs -f org-viewer
+#+end_src
+
+*** TLS-Optionen
+
+**** 1) TLS im Container (Gunicorn)
+- Cert/Key als Volume nach =/certs= mounten
+- ENV: =CERT_FILE= und =KEY_FILE= setzen
+
+**** 2) TLS via Reverse Proxy (empfohlen)
+Container läuft intern HTTP — davor Caddy/Nginx/Traefik.
+
+*** Math-Cache & Berechtigungen (wichtig!)
+Der Renderer schreibt nach =/app/.math-cache=.
+
+Wenn du bind-mountest:
+- Podman-Option =:U= verwenden (Ownership im Container)
+- bei SELinux zusätzlich =:Z=
+
+Beispiel:
+=./.math-cache:/app/.math-cache:rw,Z,U=
+
+(ist besser als =chmod 777= auf dem Host)
+
+Siehe auch die [[file:30-usage-cli.en.org][englische Version]].
+
+** Nutzung (CLI / Export / Web)
+
+*** 1) Includes expandieren (Debug)
+Zeigt, wie der Reader =#+INCLUDE=-Direktiven auflöst.
+
+#+begin_src bash :results verbatim
+python3 org_reader.py
+#+end_src
+
+*** 2) Org → HTML exportieren
+Exportiert eine Org-Datei nach HTML.
+
+#+begin_src bash :results verbatim
+python3 org_to_html.py org/90-feature-demo.org -o out.html
+#+end_src
+
+*** 3) Webviewer lokal starten
+Startet die Flask-Webapp.
+
+#+begin_src bash :results verbatim
+python3 webapp.py
+# dann: http://localhost:5000
+#+end_src
+
+*** 4) Webviewer via Gunicorn
+HTTP:
+
+#+begin_src bash :results verbatim
+gunicorn -w 4 -b 0.0.0.0:5000 webapp:app
+#+end_src
+
+TLS:
+
+#+begin_src bash :results verbatim
+gunicorn -w 4 -b 0.0.0.0:5000 webapp:app --certfile /certs/tls.crt --keyfile /certs/tls.key
+#+end_src
+
+Siehe auch die [[file:40-api-reference.en.org][englische Version]].
+
+** API-Referenz
+
+Dieser Abschnitt bündelt die Dokumentation der internen Module von =org-parser=.
+
+Die eigentlichen Texte liegen in eigenen Dateien und werden hier per
+=#+INCLUDE= eingebunden, damit sie sowohl einzeln als auch gesammelt
+gelesen werden können.
+
+*** config_loader.py
+**** Überblick
+Das Modul =config_loader.py= kapselt die gesamte Konfiguration für den Org-Reader
+(Regexe, Blocktypen, Header-Keys usw.) in einer eigenen Klasse.
+
+**** Klasse: OrgReaderConfig
+Container für Regex und Parser-Settings.
+
+Wichtige Felder (Auszug):
+- verbatim_blocks: set[str]
+- skip_header_keys: set[str]
+- quotes: dict[str,str]
+- block_re: re.Pattern
+- header_kv_re: re.Pattern
+- include_keyword_re: re.Pattern
+- section_heading_re: re.Pattern
+- comment_begin_re, comment_end_re
+- latex_macro_re
+
+Die Instanz wird als Configuration-Objekt an Reader/Parser weitergereicht.
+
+**** DEFAULT_CONFIG
+=DEFAULT_CONFIG= ist eine vorkonfigurierte Instanz von =OrgReaderConfig= mit
+kompilierten Regexen für „normale“ Org-Dateien.
+
+Gedacht als:
+- sinnvolle Standardeinstellung
+- Referenz, wie das YAML-Config-File aufgebaut ist
+
+**** load_config(path: Path) -> OrgReaderConfig
+Liest eine YAML-Datei (z. B. =config.yml=) und erzeugt daraus eine
+=OrgReaderConfig=-Instanz.
+
+Typisches Verhalten:
+- YAML wird geparst
+- Regex-Strings werden kompiliert
+- Felder wie =verbatim_blocks= / =skip_header_keys= werden in passende Typen
+  (set, dict, …) umgewandelt
+
+Wird benutzt, um die Default-Konfiguration zu überschreiben bzw. anzupassen.
+
+
+*** org_parser.py
+**** Überblick
+=org_parser.py= enthält den Streaming-Parser, der Zeilen in Events (=OrgEvent=)
+übersetzt und den zustandsbehafteten =OrgState= pflegt.
+
+**** Dataclasses
+- =OrgEvent(type: str, data: dict[str, Any])=
+  - generisches Event-Objekt
+  - =type= beschreibt die Event-Art (z. B. ="heading"=, ="block_begin"=, …)
+  - =data= enthält kontextspezifische Informationen (Level, Text, Optionen, …)
+
+- =OrgPreamble(headers: dict[str,str])=
+  - repräsentiert die Kopfzeilen (=#+TITLE=, =#+AUTHOR=, …)
+  - bequeme Properties für title/author/date/options
+
+- =OrgState=
+  - mutable Streaming-State
+  - merkt sich u. a.:
+    - ob wir im Preamble sind
+    - ob wir in einem Block / src-Block / Kommentarblock sind
+    - Kontext für Listen, Tabellen usw.
+
+**** Wichtige Funktionen
+
+- =parse_org_line(line, cfg, state) -> (state, events)=  
+  Kernfunktion des Parsers:
+  - nimmt eine einzelne Zeile (=line=)
+  - nutzt die Regexe aus =cfg=
+  - aktualisiert =state=
+  - gibt eine Liste von =events= zurück (häufig leer oder 1–2 Einträge)
+
+Typische Events:
+- =heading=
+- =block_begin= / =block_end=
+- =src_begin= / =src_end=
+- =list_item= / =ordered_list_item=
+- =table_row= / =table_hline=
+- =tblfm= (TBLFM-Zeile)
+- =name=, =caption=, =attr_html=
+- =comment=, =comment_block=
+- =latex_macro=
+- =line_tokens= (Inline-Tokenisierung des Fließtexts)
+
+- =tokenize_inline_org_markup(text) -> list[(type, text)]=  
+  Minimaler Inline-Tokenizer mit Unterstützung für:
+  - plaintext
+  - bold_text
+  - italic_text
+  - code
+  - link (kombiniertes url/desc)
+  - math_inline (für \(..\) und $..$)
+
+- =parse_src_block_options(arg_string) -> dict[str,str]=  
+  Parst die Argumente der =#+begin_src=-Zeile:
+  - Sprache (z. B. =python=, =bash=)
+  - Header-Args (z. B. =:results=, =:session=, =:tangle=, =:var= …)
+
+- =parse_html_attr_args(arg_string) -> dict[str,str]=  
+  Parst Zeilen wie:
+  - =#+ATTR_HTML: :width 50% :class foo=
+  in ein Dictionary, das der Renderer später in HTML-Attribute umsetzen kann.
+
+**** Events (aktuell)
+Der Parser erzeugt u. a. folgende Event-Typen:
+- =preamble_kv=, =preamble_end=
+- =heading=
+- =block_begin=, =block_end=
+- =src_begin=, =src_end=
+- =list_item=, =ordered_list_item=
+- =table_row=, =table_hline=, =tblfm=
+- =name=, =caption=, =attr_html=
+- =comment=, =comment_block=
+- =latex_macro=
+- =line_tokens=
+
+
+*** org_reader.py
+**** Überblick
+=org_reader.py= kümmert sich um das Lesen von Org-Dateien mit
+=#+INCLUDE=-Unterstützung und Preamble-Logik. Das Ergebnis ist ein
+Iterator über Zeilen (inkl. expandierter Includes).
+
+**** Funktionen
+
+- =un_quote_string(string, cfg) -> str=
+  - entfernt Anführungszeichen nach den Regeln in =cfg.quotes=
+  - hilfreich für Pfade/Strings aus Headern oder INCLUDE-Zeilen
+
+- =resolve_include(line, path, cfg) -> Path=
+  - wertet eine =#+INCLUDE:-Zeile aus
+  - löst den Dateipfad relativ zu =path= (aktuelles File) auf
+  - gibt einen =Path=-Wert zurück
+
+- =is_include(line, cfg) -> bool=
+  - prüft, ob eine Zeile eine INCLUDE-Anweisung ist
+  - nutzt die Regexe aus der Konfiguration
+
+- =should_skip_header_line(line, cfg) -> bool=
+  - entscheidet, ob eine Preamble-Zeile übersprungen werden soll
+  - hängt u. a. von =skip_header_keys= ab
+
+- =preamble_decision(line, cfg) -> (skip: bool, still_in_preamble: bool)=
+  - zentrale Logik für „Sind wir noch im Preamble?“
+  - bestimmt:
+    - ob die aktuelle Zeile im Preamble ignoriert wird
+    - ob das Preamble-Fenster jetzt endet
+
+- =read_with_includes(path, cfg, *, is_root=True) -> Iterator[str]=
+  - Haupt-Entry-Point des Readers
+  - liest eine Datei zeilenweise
+  - expandiert =#+INCLUDE:=-Direktiven depth-first
+  - respektiert Preamble-Entscheidung und Skip-Regeln
+
+**** read_with_includes – Regeln
+- depth-first Include-Expansion
+- keine Expansion innerhalb:
+  - Blöcken (=state.is_inside_block=)
+  - Drawers
+  - Kommentarblöcken
+- bei inkludierten Dateien:
+  - Preamble wird übersprungen, bis erster „echter“ Inhalt auftaucht
+  - deine Logik in =preamble_decision= steuert das Verhalten
+
+
+*** org_to_html.py
+**** Überblick
+=org_to_html.py= enthält den minimalen Org→HTML-Renderer. Er nimmt
+=OrgEvent=-Streams entgegen und erzeugt daraus ein vollständiges
+HTML-Dokument.
+
+**** Hauptfunktionen
+
+- =render_org_to_html_document(input_path, cfg) -> str=
+  - liest eine Org-Datei (über Reader + Parser)
+  - rendert den Event-Stream in einen HTML-String
+  - inklusive HTML-Header / Body-Grundgerüst
+
+- =org_to_html(input_path, output_path, cfg) -> None=
+  - Convenience-Funktion
+  - ruft =render_org_to_html_document= auf
+  - schreibt das Ergebnis nach =output_path=
+
+**** Rendering-Features (aktuell)
+Unterstützt u. a.:
+
+- Headings (=h1..h6=) inkl. Tags
+- Paragraphen
+- Unordered/Ordered lists
+- Verbatim-Blocks + src-Blocks
+  - =data-language= Attribut
+  - zusätzliche =data-*= Attribute aus src-Header-Args
+- Inline-Markup:
+  - fett, kursiv, Code, Links
+- Bildzeilen:
+  - „Bild-only“-Zeilen als =<figure>= mit Caption + ATTR_HTML
+- Tabellen:
+  - einfache Tabellen + Teilmenge von TBLFM
+- Kommentare + Kommentarblöcke:
+  - werden als einklappbare Bereiche gerendert
+- =:noexport:=-Headings:
+  - werden wie Kommentarbereiche behandelt (einklappbar)
+- Verse-Block:
+  - eigener Container, erhält Zeilenumbrüche
+- Inline-Math:
+  - $..$ und \(..\) werden in SVG-Bilder umgewandelt
+  - URLs: =/math/<digest>.svg=
+
+**** Wichtige interne Helfer („stabile API“)
+- =render_inline_tokens(tokens, *, preamble_macros="") -> str=
+  - rendert Inline-Token-Liste zu HTML
+  - wendet ggf. LaTeX-Makros aus dem Preamble an
+
+- =flush_paragraph(..., preamble_macros="") -> None=
+  - schreibt einen aktuell gesammelten Paragraphen in den Output-Stream
+  - sorgt für saubere Absatz-Trennung
+
+- =math_image_url(math_src, *, preamble_macros="") -> str=
+  - erzeugt den Pfad zur SVG-Math-Grafik
+  - delegiert intern an den Math-Renderer / Cache
+
+
+*** Math & Web-App
+**** Modul: math_renderer.py
+- =render_math_to_svg(math_src, out_path, *, preamble_macros="") -> None=
+  - schreibt temporäre standalone-LaTeX-Datei
+  - ruft =latex= → =dvi= → =dvisvgm= auf
+  - das Ergebnis ist eine SVG-Datei unter =out_path=
+  - nutzt einen Cache, damit dieselbe Formel nicht mehrfach gerendert wird
+
+Typische Verwendung:
+- wird indirekt vom Web-Endpunkt =/math/<digest>.svg= aufgerufen
+- Digest basiert auf Math-Quellstring + optionalen Makros
+
+**** Modul: webapp.py
+- =index()=
+  - listet =README.org= und Dateien unter =org/*.org=
+  - bietet Einstiegspunkte zum Anzeigen der Org-Dokumente
+
+- =view_file(filename)=
+  - rendert eine Org-Datei via Reader + Parser + Renderer nach HTML
+  - liefert die HTML-Ansicht im Browser
+
+- =assets(subpath)=
+  - dient statische Assets unter =/assets/...= aus (CSS, Bilder, …)
+
+- =math_image(digest)=
+  - erzeugt (oder liefert aus dem Cache) eine SVG-Math-Grafik
+  - nutzt =math_renderer.render_math_to_svg=
+
+Wichtig:
+- Math-Cache muss beschreibbar sein: =/app/.math-cache=
+- im Container wird ein Volume-Mount mit =:Z,U= empfohlen
+
+
+**** Permission denied: .math-cache/*.tex
+Ursache:
+- der Container-User besitzt keinen Schreibzugriff auf den Bind-Mount
+
+Empfohlene Lösung (Podman):
+
+- Volume mit =:U= mounten:
+  =./.math-cache:/app/.math-cache:rw,Z,U=
+
+Warum nicht =chmod 777=?  
+- funktioniert zwar
+- ist aber unsauber und kann Sicherheitsprobleme erzeugen
+
+**** curl: "Empty reply" / "unexpected eof"
+Typische Ursachen:
+
+- du sprichst HTTPS an, aber der Container liefert HTTP
+- oder umgekehrt (TLS erwartet, aber nicht aktiv)
+
+Checkliste:
+
+#+begin_src bash
+podman logs org-viewer
+ss -tlpn | grep 5000
+curl http://localhost:5000
+#+end_src
+
+**** TLS disabled (no cert/key found)
+Mögliche Gründe:
+
+- CERT_FILE / KEY_FILE sind falsch gesetzt
+- Zertifikate wurden nicht nach =/certs= gemountet
+- Dateinamen/Owner im Container stimmen nicht
+
+Debug:
+
+#+begin_src bash
+ls -al /certs
+#+end_src
+
+**** Was dieses Dokument testet
+- Preamble-Parsing
+- INCLUDE (depth-first)
+- Überschriften & Tags
+- Listen
+- Inline-Markup & Links
+- Bilder + Caption + ATTR_HTML + NAME
+- Verbatim- und src-Blöcke
+- Tabellen + TBLFM
+- Inline-Math + LaTeX-Makros
+
+**** Bilder / Anchors / Caption / ATTR_HTML
+
+#+NAME: fig:sample_out
+#+CAPTION: Beispielausgabe, gerendert durch den Parser
+#+ATTR_HTML: :width 50%
+[[file:img/RenderedExample.png][Rendered example screenshot]]
+
+**** Inline-Math und LaTeX
+Beispiel: \(\sum^{superscript}\) und $\textsf{\LaTeX}$
+
+**** Tabellen + TBLFM
+
+| Name     | Deutsch | Mathe | Durchschnitt |
+|----------+---------+-------+--------------|
+| Schüler1 |       2 |     3 |              |
+| Schüler2 |       1 |     1 |              |
+#+TBLFM: $4=round(($2+$3)/2, 2)
+
+**** Hinweis
+Dieses Projekt ist ein Hobby-Projekt, teilweise mit Hilfe von ChatGPT entstanden
+und nicht für produktiven Einsatz gedacht.
+Lizenz: GPLv3
+
+

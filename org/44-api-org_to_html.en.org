@@ -1,0 +1,56 @@
+#+TITLE: org_to_html.py – API (English)
+
+**** Overview
+=org_to_html.py= contains the minimal Org→HTML renderer. It consumes
+=OrgEvent= streams and produces a complete HTML document.
+
+**** Main functions
+
+- =render_org_to_html_document(input_path, cfg) -> str=
+  - reads an Org file (via reader + parser)
+  - renders the event stream into an HTML string
+  - includes a basic HTML header/body scaffold
+
+- =org_to_html(input_path, output_path, cfg) -> None=
+  - convenience function
+  - calls =render_org_to_html_document=
+  - writes the result to =output_path=
+
+**** Rendering features (current)
+It currently supports:
+
+- headings (=h1..h6=) with tags
+- paragraphs
+- unordered/ordered lists
+- verbatim blocks + src blocks
+  - =data-language= attribute
+  - additional =data-*= attributes from src header args
+- inline markup:
+  - bold, italic, code, links
+- image-only lines:
+  - rendered as =<figure>= with caption + ATTR_HTML
+- tables:
+  - simple tables + a subset of TBLFM
+- comments + comment blocks:
+  - rendered as collapsible sections
+- =:noexport:= headings:
+  - treated like comment sections (collapsible)
+- verse blocks:
+  - own container preserving line breaks
+- inline math:
+  - $..$ and \(..\) are rendered as SVG images
+  - URLs: =/math/<digest>.svg=
+
+**** Important internal helpers (“stable API-ish”)
+- =render_inline_tokens(tokens, *, preamble_macros="") -> str=
+  - renders a list of inline tokens to HTML
+  - optionally applies LaTeX macros from the preamble
+
+- =flush_paragraph(..., preamble_macros="") -> None=
+  - writes the currently accumulated paragraph into the output stream
+  - ensures clean paragraph separation
+
+- =math_image_url(math_src, *, preamble_macros="") -> str=
+  - builds the URL/path for the SVG math image
+  - delegates to the math renderer / cache
+

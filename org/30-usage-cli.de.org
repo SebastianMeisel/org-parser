@@ -1,26 +1,41 @@
-** 1) Includes expandieren (Debug)
+#+TITLE: Nutzung – CLI, Export & Web (Deutsch)
+
+Siehe auch die [[file:30-usage-cli.en.org][englische Version]].
+
+** Nutzung (CLI / Export / Web)
+
+*** 1) Includes expandieren (Debug)
+Zeigt, wie der Reader =#+INCLUDE=-Direktiven auflöst.
+
 #+begin_src bash :results verbatim
 python3 org_reader.py
 #+end_src
 
-** 2) Org → HTML exportieren
+*** 2) Org → HTML exportieren
+Exportiert eine Org-Datei nach HTML.
+
 #+begin_src bash :results verbatim
 python3 org_to_html.py org/90-feature-demo.org -o out.html
 #+end_src
 
-** 3) Webviewer starten (lokal)
+*** 3) Webviewer lokal starten
+Startet die Flask-Webapp.
+
 #+begin_src bash :results verbatim
 python3 webapp.py
 # dann: http://localhost:5000
 #+end_src
 
-** 4) Webviewer via Gunicorn
+*** 4) Webviewer via Gunicorn
 HTTP:
+
 #+begin_src bash :results verbatim
 gunicorn -w 4 -b 0.0.0.0:5000 webapp:app
 #+end_src
 
 TLS:
+
 #+begin_src bash :results verbatim
 gunicorn -w 4 -b 0.0.0.0:5000 webapp:app --certfile /certs/tls.crt --keyfile /certs/tls.key
 #+end_src
+

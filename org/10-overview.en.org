@@ -1,0 +1,21 @@
+#+TITLE: org-parser – Overview (English)
+
+See also the [[file:10-overview.de.org][German version]].
+
+** What is this?
+=org-parser= is a small streaming Org reader and minimal Org→HTML exporter.
+
+I built it so I can read my Org files on devices where I can’t install Emacs.
+
+Building blocks:
+- =org_reader.py=: reads Org files line-by-line and expands =#+INCLUDE= depth-first
+- =org_parser.py=: streaming parser emitting events (=OrgEvent=)
+- =org_to_html.py=: minimal renderer
+- =webapp.py=: web viewer (Flask)
+- =math_renderer.py=: LaTeX → SVG (cache)
+
+Design goals:
+- streaming / lazy
+- “good enough” Org support
+- clear state + events pipeline
+

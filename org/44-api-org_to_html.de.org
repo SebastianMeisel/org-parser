@@ -1,0 +1,57 @@
+#+TITLE: org_to_html.py – API (Deutsch)
+
+**** Überblick
+=org_to_html.py= enthält den minimalen Org→HTML-Renderer. Er nimmt
+=OrgEvent=-Streams entgegen und erzeugt daraus ein vollständiges
+HTML-Dokument.
+
+**** Hauptfunktionen
+
+- =render_org_to_html_document(input_path, cfg) -> str=
+  - liest eine Org-Datei (über Reader + Parser)
+  - rendert den Event-Stream in einen HTML-String
+  - inklusive HTML-Header / Body-Grundgerüst
+
+- =org_to_html(input_path, output_path, cfg) -> None=
+  - Convenience-Funktion
+  - ruft =render_org_to_html_document= auf
+  - schreibt das Ergebnis nach =output_path=
+
+**** Rendering-Features (aktuell)
+Unterstützt u. a.:
+
+- Headings (=h1..h6=) inkl. Tags
+- Paragraphen
+- Unordered/Ordered lists
+- Verbatim-Blocks + src-Blocks
+  - =data-language= Attribut
+  - zusätzliche =data-*= Attribute aus src-Header-Args
+- Inline-Markup:
+  - fett, kursiv, Code, Links
+- Bildzeilen:
+  - „Bild-only“-Zeilen als =<figure>= mit Caption + ATTR_HTML
+- Tabellen:
+  - einfache Tabellen + Teilmenge von TBLFM
+- Kommentare + Kommentarblöcke:
+  - werden als einklappbare Bereiche gerendert
+- =:noexport:=-Headings:
+  - werden wie Kommentarbereiche behandelt (einklappbar)
+- Verse-Block:
+  - eigener Container, erhält Zeilenumbrüche
+- Inline-Math:
+  - $..$ und \(..\) werden in SVG-Bilder umgewandelt
+  - URLs: =/math/<digest>.svg=
+
+**** Wichtige interne Helfer („stabile API“)
+- =render_inline_tokens(tokens, *, preamble_macros="") -> str=
+  - rendert Inline-Token-Liste zu HTML
+  - wendet ggf. LaTeX-Makros aus dem Preamble an
+
+- =flush_paragraph(..., preamble_macros="") -> None=
+  - schreibt einen aktuell gesammelten Paragraphen in den Output-Stream
+  - sorgt für saubere Absatz-Trennung
+
+- =math_image_url(math_src, *, preamble_macros="") -> str=
+  - erzeugt den Pfad zur SVG-Math-Grafik
+  - delegiert intern an den Math-Renderer / Cache
+

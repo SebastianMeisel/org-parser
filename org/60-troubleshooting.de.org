@@ -1,0 +1,42 @@
+#+TITLE: Troubleshooting (Deutsch)
+
+**** Permission denied: .math-cache/*.tex
+Ursache:
+- der Container-User besitzt keinen Schreibzugriff auf den Bind-Mount
+
+Empfohlene Lösung (Podman):
+
+- Volume mit =:U= mounten:
+  =./.math-cache:/app/.math-cache:rw,Z,U=
+
+Warum nicht =chmod 777=?  
+- funktioniert zwar
+- ist aber unsauber und kann Sicherheitsprobleme erzeugen
+
+**** curl: "Empty reply" / "unexpected eof"
+Typische Ursachen:
+
+- du sprichst HTTPS an, aber der Container liefert HTTP
+- oder umgekehrt (TLS erwartet, aber nicht aktiv)
+
+Checkliste:
+
+#+begin_src bash
+podman logs org-viewer
+ss -tlpn | grep 5000
+curl http://localhost:5000
+#+end_src
+
+**** TLS disabled (no cert/key found)
+Mögliche Gründe:
+
+- CERT_FILE / KEY_FILE sind falsch gesetzt
+- Zertifikate wurden nicht nach =/certs= gemountet
+- Dateinamen/Owner im Container stimmen nicht
+
+Debug:
+
+#+begin_src bash
+ls -al /certs
+#+end_src
+

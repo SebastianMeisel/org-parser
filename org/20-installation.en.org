@@ -1,0 +1,65 @@
+#+TITLE: Installation & Running (English)
+
+See also the [[file:20-installation.de.org][German version]].
+
+** Installation & running
+
+*** Option A: Local (system Python)
+Requirements:
+- Python ≥ 3.12 recommended
+- for math SVG: =latex= and =dvisvgm= in PATH
+
+Minimal:
+#+begin_src bash :results verbatim
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -U pip
+pip install flask gunicorn pyyaml
+#+end_src
+
+*** Option B: Local with =uv=
+#+begin_src bash :results verbatim
+uv venv
+source .venv/bin/activate
+uv pip install flask gunicorn pyyaml
+#+end_src
+
+*** Option C: Container (Podman/Docker)
+Build an image and run it with (podman-)compose.
+
+Benefits:
+- reproducible
+- no Python setup needed on the host
+
+**** Build
+#+begin_src bash :results verbatim
+podman build -t org-viewer:latest -f Containerfile .
+#+end_src
+
+**** Run (Compose)
+#+begin_src bash :results verbatim
+podman-compose up -d
+podman logs -f org-viewer
+#+end_src
+
+*** TLS options
+
+**** 1) TLS inside the container (Gunicorn)
+- mount cert/key to =/certs=
+- set =CERT_FILE= and =KEY_FILE=
+
+**** 2) TLS via reverse proxy (recommended)
+Container serves HTTP internally — let Caddy/Nginx/Traefik handle TLS.
+
+*** Math cache & permissions (important!)
+The renderer writes to =/app/.math-cache=.
+
+With a bind mount:
+- use Podman =:U= so ownership matches inside the container
+- with SELinux add =:Z=
+
+Example:
+=./.math-cache:/app/.math-cache:rw,Z,U=
+
+(better than =chmod 777= on the host)
+
