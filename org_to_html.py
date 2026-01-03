@@ -1169,6 +1169,7 @@ def render_org_to_html_body(
         if any(ev.type == "drawer" for ev in events):
             # This was the :END: line that just closed a drawer
             continue
+
         # ------------------------------------------------------------
 
 
