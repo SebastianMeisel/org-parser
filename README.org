@@ -234,3 +234,14 @@ Fix (Podman):
 
 * Feature-Demo / Regression-Test
 Siehe: [[file:90-feature-demo.org][90-feature-demo.org]]
+
+* Hinweis & Lizenz
+
+** Disclaimer
+Dieses Projekt ist ein Hobby-Projekt und teilweise mit Unterstützung durch ChatGPT entstanden.
+Es ist nicht für den produktiven Einsatz gedacht und wird ohne Garantie bereitgestellt.
+
+** Lizenz
+Dieses Projekt steht unter der GPLv3.
+
+Der vollständige Lizenztext ist in der Datei COPYING / LICENSE zu finden.
