@@ -1,0 +1,84 @@
+#+COLUMNS: %25ITEM(Task) %8TODO(Status) %8PRIORITY(Priority) %8Effort(Effort){:} %8CLOCKSUM(Clocked)
+
+* Project: Example Project
+  :PROPERTIES:
+  :ID:       project_x
+  :END:
+
+** TODO [#A] Prepare project plan
+    DEADLINE: <2026-01-15 Mon>
+
+    :PROPERTIES:
+    :Effort:   5:00
+    :PRIORITY: A
+    :END:
+
+    Some description or notes for this task.
+
+** DONE [#B] Design phase
+    :PROPERTIES:
+    :Effort:   3:30
+    :PRIORITY: B
+    :END:
+
+    This phase includes the following design tasks:
+
+*** DONE Create wireframes
+      :PROPERTIES:
+      :Effort:   2:00
+      :PRIORITY: C
+      :END:
+      :LOGBOOK:
+      CLOCK: [2026-01-07 Wed 10:00]--[2026-01-07 Wed 12:00] =>  2:00
+      :END:
+
+*** DONE Review design with team
+      :PROPERTIES:
+      :Effort:   1:30
+      :PRIORITY: B
+      :END:
+      :LOGBOOK:
+      CLOCK: [2026-01-08 Thu 14:00]--[2026-01-08 Thu 15:30] =>  1:30
+      :END:
+
+** TODO [#C] Implementation phase
+    :PROPERTIES:
+    :Effort:   9:00
+    :PRIORITY: C
+    :END:
+
+    Remaining development tasks:
+
+*** TODO Develop feature X
+      :PROPERTIES:
+      :Effort:   4:00
+      :PRIORITY: B
+      :END:
+
+*** TODO Develop feature Y
+      :PROPERTIES:
+      :Effort:   3:00
+      :PRIORITY: B
+      :END:
+
+*** DONE Setup CI/CD pipeline
+      :PROPERTIES:
+      :Effort:   2:00
+      :PRIORITY: C
+      :END:
+      :LOGBOOK:
+      CLOCK: [2026-01-10 Sat 09:00]--[2026-01-10 Sat 11:00] =>  2:00
+      :END:
+
+** TODO [#A] Launch
+    DEADLINE: <2026-02-01 Sun>
+
+    :PROPERTIES:
+    :Effort:   1:00
+    :PRIORITY: A
+    :END:
+
+    Prepare release notes, announcements, and final checklist.
+
+#+BEGIN: columnview :id "project_x" :hlines 1 :indent t
+#+END:
